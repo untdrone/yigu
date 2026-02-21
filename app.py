@@ -26,8 +26,17 @@ def load_and_preprocess():
     df = pd.read_csv(CSV_PATH)
     df.columns = df.columns.str.lower().str.strip()
     tcol = next((c for c in ["time", "datetime", "timestamp", "date", "dt"] if c in df.columns), None)
+    
+    # Convert time
     df['time'] = pd.to_datetime(df[tcol]).dt.tz_localize(None).dt.tz_localize(TZ, ambiguous='infer')
     df = df.dropna(subset=["time"]).sort_values("time")
+    
+    # Calculate SMAs on the FULL dataset for accuracy
+    df['sma5'] = df['close'].rolling(window=5).mean()
+    df['sma10'] = df['close'].rolling(window=10).mean()
+    df['sma20'] = df['close'].rolling(window=20).mean()
+    df['sma50'] = df['close'].rolling(window=50).mean()
+    
     df["date"] = df["time"].dt.date
     df["clock"] = df["time"].dt.strftime("%H:%M")
     return df
@@ -40,21 +49,42 @@ def compute_label_from_df(day_df):
     return label, "".join(str(b) for b in bits)
 
 def plot_candles_st(df_plot, split_index, title):
-    o, h, l, c = df_plot["open"].astype(float), df_plot["high"].astype(float), df_plot["low"].astype(float), df_plot["close"].astype(float)
+    o = df_plot["open"].astype(float)
+    h = df_plot["high"].astype(float)
+    l = df_plot["low"].astype(float)
+    c = df_plot["close"].astype(float)
+    
     x = np.arange(len(df_plot))
-    fig, ax = plt.subplots(figsize=(12, 5))
-    width = 0.7
+    fig, ax = plt.subplots(figsize=(16, 8)) # Slightly taller for better SMA visibility
+    
+    # Plot SMAs
+    ax.plot(x, df_plot["sma5"], label="SMA 5", color="gold", alpha=0.7, linewidth=1.2)
+    ax.plot(x, df_plot["sma10"], label="SMA 10", color="dodgerblue", alpha=0.7, linewidth=1.2)
+    ax.plot(x, df_plot["sma20"], label="SMA 20", color="magenta", alpha=0.7, linewidth=1.2)
+    ax.plot(x, df_plot["sma50"], label="SMA 50", color="darkorange", alpha=0.7, linewidth=1.2)
+    
+    # Plot Candlesticks
+    width = 0.6
     for i in range(len(df_plot)):
         color = "green" if o.iloc[i] < c.iloc[i] else "red"
+        # Wick
         ax.vlines(x[i], l.iloc[i], h.iloc[i], color=color, linewidth=1)
+        # Body
         y0, height = min(o.iloc[i], c.iloc[i]), abs(c.iloc[i] - o.iloc[i])
-        ax.add_patch(Rectangle((x[i] - width/2, y0), width, max(height, 0.001), facecolor=color))
-    ax.axvline(split_index - 0.5, color="gray", linestyle="--", alpha=0.5)
-    ax.set_title(title)
-    step = max(1, len(df_plot) // 10)
+        ax.add_patch(Rectangle((x[i] - width/2, y0), width, max(height, 0.001), facecolor=color, alpha=0.9))
+
+    # Split separator
+    ax.axvline(split_index - 0.5, color="white", linestyle="--", alpha=0.3)
+    
+    ax.set_title(title, fontsize=14)
+    ax.legend(loc="upper left", fontsize=10)
+    
+    # X-axis formatting
+    step = max(1, len(df_plot) // 12)
     ax.set_xticks(x[::step])
     ax.set_xticklabels(df_plot["time"].dt.strftime("%m-%d %H:%M").iloc[::step], rotation=30)
-    plt.grid(alpha=0.2)
+    
+    plt.grid(alpha=0.15)
     return fig
 
 # --- HELPER TO CONVERT IMAGE TO BASE64 ---
@@ -81,8 +111,6 @@ else:
     """
 
 st.markdown(header_html, unsafe_allow_html=True)
-
-# Instruction kept as requested
 st.markdown("Select the pattern of the first six 5-minute bars to identify historical market trends.")
 
 # --- BIT INPUT TABLE ---
