@@ -56,25 +56,27 @@ def plot_candles_st(df_plot, split_index, title):
     plt.grid(alpha=0.2)
     return fig
 
-# --- CUSTOM HEADER ---
-# We use columns to align the image and the title text
-col1, col2 = st.columns([1, 5])
+# --- CUSTOM HEADER (Updated Layout) ---
+# Column 1 is now wider to hold the big image
+col1, col2 = st.columns([2, 3]) 
 
 with col1:
     if os.path.exists("money_bag.png"):
-        st.image("money_bag.png", width=120)
+        # Image is now 360px (3x bigger than 120px)
+        st.image("money_bag.png", width=360) 
     else:
-        st.write("💰") # Fallback emoji
+        st.write("💰")
 
 with col2:
-    # We use Markdown with HTML to control the font size and vertical alignment
+    # Text is now 32px (half of 65px)
+    # Increased padding-top to keep text centered next to the larger bag
     st.markdown("""
         <style>
             .main-title {
-                font-size: 65px !important;
+                font-size: 32px !important; 
                 font-weight: 700;
-                color: #FF4B4B; /* Optional: Matching red color */
-                padding-top: 15px;
+                color: #FF4B4B;
+                padding-top: 160px; 
                 margin-bottom: 0px;
             }
         </style>
