@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import os
+import base64
 
 # --- CONFIG ---
 CSV_PATH = "spx_raw2025.csv"
@@ -56,25 +57,30 @@ def plot_candles_st(df_plot, split_index, title):
     plt.grid(alpha=0.2)
     return fig
 
-# --- UPDATED HEADER (IMAGE & TITLE IN SAME ROW) ---
-col1, col2 = st.columns([1, 2]) # 1:2 ratio to keep them close together
+# --- HELPER TO CONVERT IMAGE TO BASE64 (for HTML injection) ---
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
 
-with col1:
-    if os.path.exists("money_bag.png"):
-        st.image("money_bag.png", width=360) # 3x bigger
-    else:
-        st.write("💰")
-
-with col2:
-    # We use margin-top to vertically center the 32px text next to the 360px image
-    st.markdown("""
-        <div style="margin-top: 150px;">
-            <h1 style="font-size: 32px; color: #FF4B4B; font-family: sans-serif;">
-                SPX Trend
-            </h1>
+# --- HEADER SECTION (Using Flexbox to guarantee same row) ---
+if os.path.exists("money_bag.png"):
+    img_base64 = get_base64_of_bin_file("money_bag.png")
+    header_html = f"""
+        <div style="display: flex; align-items: center; gap: 30px; margin-bottom: 20px;">
+            <img src="data:image/png;base64,{img_base64}" width="360">
+            <h1 style="font-size: 32px; color: #FF4B4B; font-family: sans-serif; margin: 0;">SPX Trend</h1>
         </div>
-        """, unsafe_allow_html=True)
+    """
+else:
+    header_html = """
+        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+            <span style="font-size: 80px;">💰</span>
+            <h1 style="font-size: 32px; color: #FF4B4B; font-family: sans-serif; margin: 0;">SPX Trend</h1>
+        </div>
+    """
 
+st.markdown(header_html, unsafe_allow_html=True)
 st.markdown("Select the pattern of the first six 5-minute bars to identify historical market trends.")
 
 # --- BIT INPUT TABLE ---
