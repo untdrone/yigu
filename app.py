@@ -13,7 +13,7 @@ YDAY_LAST_HOUR_START, YDAY_LAST_HOUR_END = "14:00", "15:00"
 FIRST6_START, FIRST6_END = "08:30", "08:55"
 WEIGHTS = [1, 2, 4, 8, 16, 32]
 
-# --- 1. SET PAGE TITLE ---
+# --- PAGE CONFIG ---
 st.set_page_config(page_title="SPX Trend", layout="wide")
 
 # --- DATA PROCESSING ---
@@ -56,19 +56,30 @@ def plot_candles_st(df_plot, split_index, title):
     plt.grid(alpha=0.2)
     return fig
 
-# --- 2. WEB UI WITH COIN LOGO ---
-col_logo, col_title = st.columns([1, 8])
+# --- CUSTOM HEADER ---
+# We use columns to align the image and the title text
+col1, col2 = st.columns([1, 5])
 
-with col_logo:
-    # This checks if you uploaded coin.png to your GitHub
-    if os.path.exists("coin.png"):
-        st.image("coin.png", width=80)
+with col1:
+    if os.path.exists("money_bag.png"):
+        st.image("money_bag.png", width=120)
     else:
-        # Fallback if image is missing
-        st.write("🪙") 
+        st.write("💰") # Fallback emoji
 
-with col_title:
-    st.title("SPX Trend")
+with col2:
+    # We use Markdown with HTML to control the font size and vertical alignment
+    st.markdown("""
+        <style>
+            .main-title {
+                font-size: 65px !important;
+                font-weight: 700;
+                color: #FF4B4B; /* Optional: Matching red color */
+                padding-top: 15px;
+                margin-bottom: 0px;
+            }
+        </style>
+        <p class="main-title">SPX Trend</p>
+        """, unsafe_allow_html=True)
 
 st.markdown("Select the pattern of the first six 5-minute bars to identify historical market trends.")
 
