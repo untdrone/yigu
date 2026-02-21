@@ -57,13 +57,13 @@ def plot_candles_st(df_plot, split_index, title):
     plt.grid(alpha=0.2)
     return fig
 
-# --- HELPER TO CONVERT IMAGE TO BASE64 (for HTML injection) ---
+# --- HELPER TO CONVERT IMAGE TO BASE64 ---
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
     return base64.b64encode(data).decode()
 
-# --- HEADER SECTION (Using Flexbox to guarantee same row) ---
+# --- HEADER SECTION (FLEXBOX) ---
 if os.path.exists("money_bag.png"):
     img_base64 = get_base64_of_bin_file("money_bag.png")
     header_html = f"""
@@ -81,10 +81,11 @@ else:
     """
 
 st.markdown(header_html, unsafe_allow_html=True)
+
+# Instruction kept as requested
 st.markdown("Select the pattern of the first six 5-minute bars to identify historical market trends.")
 
 # --- BIT INPUT TABLE ---
-st.subheader("Step 1: Input Morning Pattern")
 cols = st.columns(6)
 times = ["08:30", "08:35", "08:40", "08:45", "08:50", "08:55"]
 user_bits = []
