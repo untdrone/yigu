@@ -13,7 +13,8 @@ YDAY_LAST_HOUR_START, YDAY_LAST_HOUR_END = "14:00", "15:00"
 FIRST6_START, FIRST6_END = "08:30", "08:55"
 WEIGHTS = [1, 2, 4, 8, 16, 32]
 
-st.set_page_config(page_title="SPX Candle Pattern Search", layout="wide")
+# --- 1. SET PAGE TITLE ---
+st.set_page_config(page_title="SPX Trend", layout="wide")
 
 # --- DATA PROCESSING ---
 @st.cache_data
@@ -21,11 +22,9 @@ def load_and_preprocess():
     if not os.path.exists(CSV_PATH):
         st.error(f"File {CSV_PATH} not found!")
         return None
-    
     df = pd.read_csv(CSV_PATH)
     df.columns = df.columns.str.lower().str.strip()
     tcol = next((c for c in ["time", "datetime", "timestamp", "date", "dt"] if c in df.columns), None)
-    
     df['time'] = pd.to_datetime(df[tcol]).dt.tz_localize(None).dt.tz_localize(TZ, ambiguous='infer')
     df = df.dropna(subset=["time"]).sort_values("time")
     df["date"] = df["time"].dt.date
@@ -57,9 +56,21 @@ def plot_candles_st(df_plot, split_index, title):
     plt.grid(alpha=0.2)
     return fig
 
-# --- WEB UI ---
-st.title("🕯️ SPX Candle Pattern Explorer")
-st.markdown("Select the colors of the first six 5-minute candles (08:30 - 08:55 CT) to find historical matches.")
+# --- 2. WEB UI WITH COIN LOGO ---
+col_logo, col_title = st.columns([1, 8])
+
+with col_logo:
+    # This checks if you uploaded coin.png to your GitHub
+    if os.path.exists("coin.png"):
+        st.image("coin.png", width=80)
+    else:
+        # Fallback if image is missing
+        st.write("🪙") 
+
+with col_title:
+    st.title("SPX Trend")
+
+st.markdown("Select the pattern of the first six 5-minute bars to identify historical market trends.")
 
 # --- BIT INPUT TABLE ---
 st.subheader("Step 1: Input Morning Pattern")
@@ -69,20 +80,18 @@ user_bits = []
 
 for i, col in enumerate(cols):
     with col:
-        # Use a selectbox for Red (0) or Green (1)
         choice = st.selectbox(
             f"{times[i]} Bar",
             options=["🔴 RED (0)", "🟢 GREEN (1)"],
-            index=0, # Default to Red
+            index=0,
             key=f"bar_{i}"
         )
         user_bits.append(0 if "RED" in choice else 1)
 
-# Calculate Integer Label based on bits
 target_label = int(sum(w * b for w, b in zip(WEIGHTS, user_bits)))
 bit_string = "".join(str(b) for b in user_bits)
 
-st.info(f"**Calculated Label:** {target_label} | **Bit Sequence:** {bit_string}")
+st.info(f"**Pattern Sequence:** {bit_string} | **Label:** {target_label}")
 
 # --- SEARCH AND DISPLAY ---
 df = load_and_preprocess()
@@ -94,8 +103,6 @@ if df is not None:
     for i in range(1, len(days)):
         d_today, d_yday = days[i], days[i-1]
         today_data = df[df["date"] == d_today]
-        
-        # Check if this day matches our user-input label
         day_label, day_bits = compute_label_from_df(today_data)
         
         if day_label == target_label:
