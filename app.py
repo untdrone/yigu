@@ -31,7 +31,7 @@ def load_and_preprocess():
     df['time'] = pd.to_datetime(df[tcol]).dt.tz_localize(None).dt.tz_localize(TZ, ambiguous='infer')
     df = df.dropna(subset=["time"]).sort_values("time")
     
-    # Calculate SMAs on the FULL dataset for accuracy
+    # Calculate SMAs for the full dataset
     df['sma5'] = df['close'].rolling(window=5).mean()
     df['sma10'] = df['close'].rolling(window=10).mean()
     df['sma20'] = df['close'].rolling(window=20).mean()
@@ -55,28 +55,30 @@ def plot_candles_st(df_plot, split_index, title):
     c = df_plot["close"].astype(float)
     
     x = np.arange(len(df_plot))
-    fig, ax = plt.subplots(figsize=(16, 8)) # Slightly taller for better SMA visibility
+    fig, ax = plt.subplots(figsize=(16, 8))
     
+    # --- ADD SHADOW FOR YESTERDAY ---
+    # Highlights the background from the start to the split line
+    ax.axvspan(-0.5, split_index - 0.5, facecolor='gray', alpha=0.1, label='Yesterday (Last Hour)')
+
     # Plot SMAs
-    ax.plot(x, df_plot["sma5"], label="SMA 5", color="gold", alpha=0.7, linewidth=1.2)
-    ax.plot(x, df_plot["sma10"], label="SMA 10", color="dodgerblue", alpha=0.7, linewidth=1.2)
-    ax.plot(x, df_plot["sma20"], label="SMA 20", color="magenta", alpha=0.7, linewidth=1.2)
-    ax.plot(x, df_plot["sma50"], label="SMA 50", color="darkorange", alpha=0.7, linewidth=1.2)
+    ax.plot(x, df_plot["sma5"], label="SMA 5", color="gold", alpha=0.8, linewidth=1.5)
+    ax.plot(x, df_plot["sma10"], label="SMA 10", color="dodgerblue", alpha=0.8, linewidth=1.5)
+    ax.plot(x, df_plot["sma20"], label="SMA 20", color="magenta", alpha=0.8, linewidth=1.5)
+    ax.plot(x, df_plot["sma50"], label="SMA 50", color="darkorange", alpha=0.8, linewidth=1.5)
     
     # Plot Candlesticks
     width = 0.6
     for i in range(len(df_plot)):
         color = "green" if o.iloc[i] < c.iloc[i] else "red"
-        # Wick
         ax.vlines(x[i], l.iloc[i], h.iloc[i], color=color, linewidth=1)
-        # Body
         y0, height = min(o.iloc[i], c.iloc[i]), abs(c.iloc[i] - o.iloc[i])
         ax.add_patch(Rectangle((x[i] - width/2, y0), width, max(height, 0.001), facecolor=color, alpha=0.9))
 
-    # Split separator
-    ax.axvline(split_index - 0.5, color="white", linestyle="--", alpha=0.3)
+    # Vertical Separator Line
+    ax.axvline(split_index - 0.5, color="black", linestyle="--", linewidth=1.5, alpha=0.5)
     
-    ax.set_title(title, fontsize=14)
+    ax.set_title(title, fontsize=14, fontweight='bold')
     ax.legend(loc="upper left", fontsize=10)
     
     # X-axis formatting
@@ -84,7 +86,8 @@ def plot_candles_st(df_plot, split_index, title):
     ax.set_xticks(x[::step])
     ax.set_xticklabels(df_plot["time"].dt.strftime("%m-%d %H:%M").iloc[::step], rotation=30)
     
-    plt.grid(alpha=0.15)
+    plt.grid(alpha=0.1)
+    plt.tight_layout()
     return fig
 
 # --- HELPER TO CONVERT IMAGE TO BASE64 ---
