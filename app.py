@@ -56,31 +56,23 @@ def plot_candles_st(df_plot, split_index, title):
     plt.grid(alpha=0.2)
     return fig
 
-# --- CUSTOM HEADER (Updated Layout) ---
-# Column 1 is now wider to hold the big image
-col1, col2 = st.columns([2, 3]) 
+# --- UPDATED HEADER (IMAGE & TITLE IN SAME ROW) ---
+col1, col2 = st.columns([1, 2]) # 1:2 ratio to keep them close together
 
 with col1:
     if os.path.exists("money_bag.png"):
-        # Image is now 360px (3x bigger than 120px)
-        st.image("money_bag.png", width=360) 
+        st.image("money_bag.png", width=360) # 3x bigger
     else:
         st.write("💰")
 
 with col2:
-    # Text is now 32px (half of 65px)
-    # Increased padding-top to keep text centered next to the larger bag
+    # We use margin-top to vertically center the 32px text next to the 360px image
     st.markdown("""
-        <style>
-            .main-title {
-                font-size: 32px !important; 
-                font-weight: 700;
-                color: #FF4B4B;
-                padding-top: 160px; 
-                margin-bottom: 0px;
-            }
-        </style>
-        <p class="main-title">SPX Trend</p>
+        <div style="margin-top: 150px;">
+            <h1 style="font-size: 32px; color: #FF4B4B; font-family: sans-serif;">
+                SPX Trend
+            </h1>
+        </div>
         """, unsafe_allow_html=True)
 
 st.markdown("Select the pattern of the first six 5-minute bars to identify historical market trends.")
